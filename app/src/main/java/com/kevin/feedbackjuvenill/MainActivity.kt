@@ -164,33 +164,52 @@ fun NewsScreen(viewModel: MainViewModel) {
 @Composable
 fun NewsCard(news: NewsItem) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = news.category,
+                text = news.category.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.2.sp
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = news.title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 4.dp)
+                color = Color(0xFF1C1B1F),
+                lineHeight = 26.sp
             )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = news.description,
                 style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2
+                color = Color.DarkGray,
+                maxLines = 3
             )
-            Text(
-                text = news.date,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.align(Alignment.End),
-                color = Color.Gray
-            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = news.date,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+                Icon(
+                    imageVector = Icons.Filled.Share,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
