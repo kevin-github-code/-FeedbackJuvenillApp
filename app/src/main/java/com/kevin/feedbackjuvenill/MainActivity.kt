@@ -33,7 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -64,13 +64,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.window.Dialog
 
-// Data model for News
-data class NewsItem(
-    val title: String,
-    val description: String,
-    val date: String,
-    val category: String
-)
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,9 +79,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
-    var selectedItem by remember { mutableIntStateOf(0) }
-    var showReportDialog by remember { mutableStateOf(false) }
+fun MainScreen(viewModel: MainViewModel = viewModel()) {
+    val selectedItem = viewModel.selectedItem
+    val showReportDialog = viewModel.showReportDialog
     
     val items = listOf("Início", "TV Digital", "Notícias")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.PlayArrow, Icons.Filled.Info)
@@ -101,7 +95,7 @@ fun MainScreen() {
                         icon = { Icon(icons[index], contentDescription = item) },
                         label = { Text(item) },
                         selected = selectedItem == index,
-                        onClick = { selectedItem = index }
+                        onClick = { viewModel.onItemSelected(index) }
                     )
                 }
             }
@@ -109,7 +103,7 @@ fun MainScreen() {
         floatingActionButton = {
             if (selectedItem == 2) { // Only show FAB on News tab
                 FloatingActionButton(
-                    onClick = { showReportDialog = true },
+                    onClick = { viewModel.onShowReportDialog(true) },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(Icons.Filled.Create, contentDescription = "Reportar", tint = Color.White)
@@ -125,38 +119,27 @@ fun MainScreen() {
             when (selectedItem) {
                 0 -> HomeScreen()
                 1 -> TvScreen()
-                2 -> NewsScreen()
+                2 -> NewsScreen(viewModel)
             }
             
             if (showReportDialog) {
-                ReportDialog(onDismiss = { showReportDialog = false })
+                ReportDialog(onDismiss = { viewModel.onShowReportDialog(false) })
             }
         }
     }
 }
 
 @Composable
-fun NewsScreen() {
-    var selectedTab by remember { mutableIntStateOf(0) }
+fun NewsScreen(viewModel: MainViewModel) {
+    val selectedTab = viewModel.selectedNewsTab
     val tabs = listOf("Feedback Juvenil", "Mundo")
-
-    val feedbackNews = listOf(
-        NewsItem("Novo Centro Juvenil em Marracuene", "Um novo espaço para cultura e lazer será inaugurado...", "21 Ago 2026", "Local"),
-        NewsItem("Entrevista com Artistas Locais", "Conheça a história dos talentos que estão a brilhar em Maputo.", "20 Ago 2026", "Cultura"),
-        NewsItem("Debate sobre Educação", "Jovens reúnem-se para discutir o futuro do ensino técnico.", "19 Ago 2026", "Sociedade")
-    )
-
-    val worldNews = listOf(
-        NewsItem("Inovações Tecnológicas 2026", "As novas tendências que estão a mudar o mercado de trabalho global.", "21 Ago 2026", "Tech"),
-        NewsItem("Cimeira do Clima", "Líderes mundiais discutem metas para a sustentabilidade.", "20 Ago 2026", "Ambiente")
-    )
 
     Column(modifier = Modifier.fillMaxSize()) {
         TabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
-                    onClick = { selectedTab = index },
+                    onClick = { viewModel.onNewsTabSelected(index) },
                     text = { Text(title) }
                 )
             }
@@ -167,7 +150,7 @@ fun NewsScreen() {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val newsList = if (selectedTab == 0) feedbackNews else worldNews
+            val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNews
             items(newsList) { item ->
                 NewsCard(item)
             }
