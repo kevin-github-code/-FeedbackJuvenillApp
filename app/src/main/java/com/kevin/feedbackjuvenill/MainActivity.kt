@@ -47,6 +47,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.ui.viewinterop.AndroidView
 import com.kevin.feedbackjuvenill.ui.theme.FeedbackJuvenillAppTheme
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -281,62 +284,86 @@ fun ReportDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun TvScreen() {
+    var showLivePlayer by remember { mutableStateOf(false) }
     val context = LocalContext.current
     
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "TV Digital & Lives",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(vertical = 16.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         )
         
-        Text(
-            text = "Acompanhe nossas transmissões ao vivo nas redes sociais oficiais:",
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        if (!showLivePlayer) {
+            Text(
+                text = "Escolha uma plataforma para assistir ao vivo:",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
 
-        SocialButton(
-            text = "Facebook Live",
-            color = Color(0xFF1877F2),
-            icon = Icons.Filled.Share,
-            onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/feedbackjuvenil"))
-                context.startActivity(intent)
+            SocialButton(
+                text = "Assistir no YouTube",
+                color = Color(0xFFFF0000),
+                icon = Icons.Filled.PlayArrow,
+                onClick = { showLivePlayer = true }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SocialButton(
+                text = "Facebook Live (Externo)",
+                color = Color(0xFF1877F2),
+                icon = Icons.Filled.Share,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/feedbackjuvenil/live"))
+                    context.startActivity(intent)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SocialButton(
+                text = "Instagram (Externo)",
+                color = Color(0xFFE4405F),
+                icon = Icons.Filled.Info,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/feedbackjuvenil"))
+                    context.startActivity(intent)
+                }
+            )
+        } else {
+            // Player Integrado (YouTube Mobile View)
+            Column(modifier = Modifier.fillMaxSize()) {
+                TextButton(
+                    onClick = { showLivePlayer = false },
+                    modifier = Modifier.align(Alignment.Start)
+                ) {
+                    Text("← Voltar")
+                }
+                
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    elevation = CardDefaults.cardElevation(8.dp)
+                ) {
+                    AndroidView(factory = {
+                        WebView(it).apply {
+                            webViewClient = WebViewClient()
+                            settings.javaScriptEnabled = true
+                            loadUrl("https://www.youtube.com/@feedbackjuvenil/live")
+                        }
+                    })
+                }
             }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        SocialButton(
-            text = "YouTube Channel",
-            color = Color(0xFFFF0000),
-            icon = Icons.Filled.PlayArrow,
-            onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/@feedbackjuvenil"))
-                context.startActivity(intent)
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        SocialButton(
-            text = "Instagram",
-            color = Color(0xFFE4405F),
-            icon = Icons.Filled.Info,
-            onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/feedbackjuvenil"))
-                context.startActivity(intent)
-            }
-        )
+        }
     }
 }
 
