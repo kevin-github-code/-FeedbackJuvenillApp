@@ -31,6 +31,10 @@ class MainViewModel : ViewModel() {
     var selectedNewsTab by mutableIntStateOf(0)
         private set
 
+    // State for selected news detail
+    var selectedNewsItem by mutableStateOf<NewsItem?>(null)
+        private set
+
     // Real world news from API
     var worldNewsList by mutableStateOf<List<NewsItem>>(emptyList())
         private set
@@ -56,6 +60,10 @@ class MainViewModel : ViewModel() {
         if (index == 1 && worldNewsList.isEmpty()) {
             fetchWorldNews()
         }
+    }
+
+    fun onNewsItemClicked(item: NewsItem?) {
+        selectedNewsItem = item
     }
 
     private fun fetchWorldNews() {

@@ -47,11 +47,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kevin.feedbackjuvenill.ui.theme.FeedbackJuvenillAppTheme
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -71,6 +73,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -85,6 +88,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(viewModel: MainViewModel = viewModel()) {
     val selectedItem = viewModel.selectedItem
     val showReportDialog = viewModel.showReportDialog
+    val selectedNewsItem = viewModel.selectedNewsItem
     
     val items = listOf("Início", "TV Digital", "Notícias")
     val icons = listOf(Icons.Filled.Home, Icons.Filled.PlayArrow, Icons.Filled.Info)
@@ -98,13 +102,16 @@ fun MainScreen(viewModel: MainViewModel = viewModel()) {
                         icon = { Icon(icons[index], contentDescription = item) },
                         label = { Text(item) },
                         selected = selectedItem == index,
-                        onClick = { viewModel.onItemSelected(index) }
+                        onClick = { 
+                            viewModel.onItemSelected(index)
+                            viewModel.onNewsItemClicked(null) // Reset news detail when changing tabs
+                        }
                     )
                 }
             }
         },
         floatingActionButton = {
-            if (selectedItem == 2) { // Only show FAB on News tab
+            if (selectedItem == 2 && selectedNewsItem == null) { // Only show FAB on News list
                 FloatingActionButton(
                     onClick = { viewModel.onShowReportDialog(true) },
                     containerColor = MaterialTheme.colorScheme.primary
@@ -122,7 +129,13 @@ fun MainScreen(viewModel: MainViewModel = viewModel()) {
             when (selectedItem) {
                 0 -> HomeScreen()
                 1 -> TvScreen()
-                2 -> NewsScreen(viewModel)
+                2 -> {
+                    if (selectedNewsItem == null) {
+                        NewsScreen(viewModel)
+                    } else {
+                        DetailScreen(news = selectedNewsItem, onBack = { viewModel.onNewsItemClicked(null) })
+                    }
+                }
             }
             
             if (showReportDialog) {
@@ -155,18 +168,82 @@ fun NewsScreen(viewModel: MainViewModel) {
         ) {
             val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNewsList
             items(newsList) { item ->
-                NewsCard(item)
+                NewsCard(item, onClick = { viewModel.onNewsItemClicked(item) })
             }
         }
     }
 }
 
 @Composable
-fun NewsCard(news: NewsItem) {
+fun DetailScreen(news: NewsItem, onBack: () -> Unit) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onBack) {
+                Text("← Voltar")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = news.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
+
+        // Web News Detail
+        if (news.description.startsWith("http")) {
+             AndroidView(factory = {
+                WebView(it).apply {
+                    webViewClient = WebViewClient()
+                    settings.javaScriptEnabled = true
+                    loadUrl(news.description)
+                }
+            }, modifier = Modifier.fillMaxSize())
+        } else {
+            // Local News Detail
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = news.category.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = news.title,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = news.date,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = news.description,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NewsCard(news: NewsItem, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = 4.dp)
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(containerColor = Color.White)
