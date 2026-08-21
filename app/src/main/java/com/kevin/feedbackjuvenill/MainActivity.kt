@@ -108,12 +108,10 @@ fun HomeScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo Placeholder - Usaremos o ícone padrão se o arquivo não existir
-        Icon(
-            imageVector = Icons.Filled.PlayArrow,
-            contentDescription = "Logo",
-            modifier = Modifier.size(120.dp),
-            tint = MaterialTheme.colorScheme.primary
+        Image(
+            painter = painterResource(id = R.drawable.logo_feedback_juvenil),
+            contentDescription = "Logo Feedback Juvenil",
+            modifier = Modifier.size(180.dp)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
