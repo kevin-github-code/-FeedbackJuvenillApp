@@ -150,7 +150,7 @@ fun NewsScreen(viewModel: MainViewModel) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNews
+            val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNewsList
             items(newsList) { item ->
                 NewsCard(item)
             }

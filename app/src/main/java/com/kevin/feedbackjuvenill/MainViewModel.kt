@@ -6,8 +6,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
 class MainViewModel : ViewModel() {
     
+    private val newsApiService = Retrofit.Builder()
+        .baseUrl("https://newsapi.org/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(NewsApiService::class.java)
+
     // State for navigation
     var selectedItem by mutableIntStateOf(0)
         private set
@@ -20,16 +31,15 @@ class MainViewModel : ViewModel() {
     var selectedNewsTab by mutableIntStateOf(0)
         private set
 
-    // News Data
+    // Real world news from API
+    var worldNewsList by mutableStateOf<List<NewsItem>>(emptyList())
+        private set
+
+    // News Data (Placeholder for Feedback Juvenil)
     val feedbackNews = listOf(
         NewsItem("Novo Centro Juvenil em Marracuene", "Um novo espaço para cultura e lazer será inaugurado...", "21 Ago 2026", "Local"),
         NewsItem("Entrevista com Artistas Locais", "Conheça a história dos talentos que estão a brilhar em Maputo.", "20 Ago 2026", "Cultura"),
         NewsItem("Debate sobre Educação", "Jovens reúnem-se para discutir o futuro do ensino técnico.", "19 Ago 2026", "Sociedade")
-    )
-
-    val worldNews = listOf(
-        NewsItem("Inovações Tecnológicas 2026", "As novas tendências que estão a mudar o mercado de trabalho global.", "21 Ago 2026", "Tech"),
-        NewsItem("Cimeira do Clima", "Líderes mundiais discutem metas para a sustentabilidade.", "20 Ago 2026", "Ambiente")
     )
 
     // Actions
@@ -43,5 +53,27 @@ class MainViewModel : ViewModel() {
 
     fun onNewsTabSelected(index: Int) {
         selectedNewsTab = index
+        if (index == 1 && worldNewsList.isEmpty()) {
+            fetchWorldNews()
+        }
+    }
+
+    private fun fetchWorldNews() {
+        viewModelScope.launch {
+            try {
+                val response = newsApiService.getTopHeadlines()
+                worldNewsList = response.articles.map { article ->
+                    NewsItem(
+                        title = article.title,
+                        description = article.description ?: "",
+                        date = article.publishedAt,
+                        category = article.source.name
+                    )
+                }
+            } catch (e: Exception) {
+                // Em caso de erro, poderíamos mostrar uma mensagem ao usuário
+                e.printStackTrace()
+            }
+        }
     }
 }
