@@ -3,15 +3,17 @@ package com.kevin.feedbackjuvenill
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import android.util.Log
-
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -20,12 +22,20 @@ class MainViewModel : ViewModel() {
     
     private val auth = FirebaseAuth.getInstance()
     
+    private val _currentUser = MutableStateFlow(auth.currentUser)
+    val currentUserState: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
+
+    // For backwards compatibility and easier compose access if needed
     var currentUser by mutableStateOf(auth.currentUser)
         private set
 
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-        currentUser = firebaseAuth.currentUser
-        Log.d("MainViewModel", "AuthStateListener: Usuário agora é ${currentUser?.email}")
+        val user = firebaseAuth.currentUser
+        viewModelScope.launch(Dispatchers.Main) {
+            currentUser = user
+            _currentUser.value = user
+            Log.d("MainViewModel", "AuthStateListener: Usuário atualizado para ${user?.email}")
+        }
     }
 
     init {
@@ -91,14 +101,22 @@ class MainViewModel : ViewModel() {
     }
 
     fun logout() {
-        Log.d("MainViewModel", "Executando logout")
+        Log.d("MainViewModel", "Iniciando logout...")
         auth.signOut()
-        currentUser = null
+        // O listener deve cuidar do resto, mas vamos garantir
+        viewModelScope.launch(Dispatchers.Main) {
+            currentUser = null
+            _currentUser.value = null
+        }
     }
 
     fun updateCurrentUser() {
-        Log.d("MainViewModel", "Atualizando usuário: ${auth.currentUser?.email}")
-        currentUser = auth.currentUser
+        val user = auth.currentUser
+        Log.d("MainViewModel", "updateCurrentUser chamado. Usuário: ${user?.email}")
+        viewModelScope.launch(Dispatchers.Main) {
+            currentUser = user
+            _currentUser.value = user
+        }
     }
 
     private fun fetchWorldNews() {

@@ -38,8 +38,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -82,7 +84,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             FeedbackJuvenillAppTheme {
                 val viewModel: MainViewModel = viewModel()
-                if (viewModel.currentUser != null) {
+                val user by viewModel.currentUserState.collectAsState()
+                
+                Log.d("MainActivity", "Estado de Autenticação: ${user?.email}")
+                
+                if (user != null) {
                     MainScreen(viewModel)
                 } else {
                     LoginScreen(onLoginSuccess = {
