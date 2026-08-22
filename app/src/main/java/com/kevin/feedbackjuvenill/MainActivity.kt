@@ -38,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.util.Log
@@ -84,9 +83,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             FeedbackJuvenillAppTheme {
                 val viewModel: MainViewModel = viewModel()
-                val user by viewModel.currentUserState.collectAsState()
+                val user = viewModel.currentUser
                 
-                Log.d("MainActivity", "Estado de Autenticação: ${user?.email}")
+                Log.d("MainActivity", "Estado de Autenticação (Property): ${user?.email}")
                 
                 if (user != null) {
                     MainScreen(viewModel)
@@ -421,7 +420,7 @@ fun TvScreen() {
             )
 
             SocialButton(
-                text = "Assistir no YouTube",
+                text = "Assistir Feedback Juvenil",
                 color = Color(0xFFFF0000),
                 icon = Icons.Filled.PlayArrow,
                 onClick = { showLivePlayer = true }
@@ -470,7 +469,7 @@ fun TvScreen() {
                         WebView(it).apply {
                             webViewClient = WebViewClient()
                             settings.javaScriptEnabled = true
-                            loadUrl("https://www.youtube.com/@feedbackjuvenil/live")
+                            loadUrl("https://www.youtube.com/@FeedbackJuvenilmz")
                         }
                     })
                 }
