@@ -56,6 +56,8 @@ import com.kevin.feedbackjuvenill.ui.theme.FeedbackJuvenillAppTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material3.Card
@@ -127,7 +129,7 @@ fun MainScreen(viewModel: MainViewModel = viewModel()) {
                 .fillMaxSize()
         ) {
             when (selectedItem) {
-                0 -> HomeScreen()
+                0 -> HomeScreen(viewModel)
                 1 -> TvScreen()
                 2 -> {
                     if (selectedNewsItem == null) {
@@ -490,44 +492,145 @@ fun SocialButton(
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: MainViewModel) {
+    val scrollState = rememberScrollState()
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .verticalScroll(scrollState)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.Start
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo_feedback_juvenil),
-            contentDescription = "Logo Feedback Juvenil",
-            modifier = Modifier.size(180.dp)
-        )
+        // Top Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = "Olá, Bem-vindo!",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.Gray
+                )
+                Text(
+                    text = "Feedback Juvenil",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Image(
+                painter = painterResource(id = R.drawable.logo_feedback_juvenil),
+                contentDescription = "Logo",
+                modifier = Modifier.size(60.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Feedback Juvenil",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
+        // Hero Card - TV Digital
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clickable { viewModel.onItemSelected(1) },
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                        .align(Alignment.BottomStart)
+                ) {
+                    Text(
+                        text = "TV DIGITAL AO VIVO",
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall,
+                        letterSpacing = 2.sp
+                    )
+                    Text(
+                        text = "Assista nossas transmissões agora",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White.copy(alpha = 0.3f),
+                    modifier = Modifier
+                        .size(150.dp)
+                        .align(Alignment.CenterEnd)
+                        .padding(end = (-40).dp)
+                )
+            }
+        }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Quick Actions Row
         Text(
-            text = "Juntos, o futuro é de ouro",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.secondary,
-            textAlign = TextAlign.Center
+            text = "Ações Rápidas",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 12.dp)
         )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            QuickActionButton("Voz à Juventude", Icons.Filled.Create) { viewModel.onShowReportDialog(true) }
+            QuickActionButton("Notícias", Icons.Filled.Info) { viewModel.onItemSelected(2) }
+            QuickActionButton("Redes", Icons.Filled.Share) { viewModel.onItemSelected(1) }
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Latest News Preview
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Últimas Notícias",
+                style = MaterialTheme.typography.titleMedium
+            )
+            TextButton(onClick = { viewModel.onItemSelected(2) }) {
+                Text("Ver tudo")
+            }
+        }
+
+        val latestNews = viewModel.feedbackNews.firstOrNull()
+        if (latestNews != null) {
+            NewsCard(latestNews, onClick = { viewModel.onNewsItemClicked(latestNews) })
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+fun QuickActionButton(label: String, icon: ImageVector, onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Card(
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            modifier = Modifier.size(64.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary)
+            }
+        }
         Text(
-            text = "Informação e voz para a juventude de Marracuene e Maputo.",
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 24.sp
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(top = 8.dp)
         )
     }
 }
