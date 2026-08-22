@@ -1,11 +1,11 @@
 package com.kevin.feedbackjuvenill
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,7 +68,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TextButton
@@ -183,28 +182,15 @@ fun NewsScreen(viewModel: MainViewModel) {
     val tabs = listOf("Feedback Juvenil", "Mundo")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SecondaryTabRow(
-            selectedTab,
-            Modifier,
-            TabRowDefaults.primaryContainerColor,
-            TabRowDefaults.primaryContentColor,
-            @Composable { tabPositions ->
-                if (selectedTab < tabPositions.size) {
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTab])
-                    )
-                }
-            },
-            @Composable { HorizontalDivider() },
-            {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTab == index,
-                        onClick = { viewModel.onNewsTabSelected(index) },
-                        text = { Text(title) }
-                    )
-                }
-            })
+        TabRow(selectedTabIndex = selectedTab) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { viewModel.onNewsTabSelected(index) },
+                    text = { Text(title) }
+                )
+            }
+        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -219,6 +205,7 @@ fun NewsScreen(viewModel: MainViewModel) {
     }
 }
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun DetailScreen(news: NewsItem, onBack: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -475,7 +462,8 @@ fun TvScreen() {
                 color = Color(0xFFE4405F),
                 icon = Icons.Filled.Info,
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.instagram.com/feedbackjuvenil"))
+                    val intent = Intent(Intent.ACTION_VIEW,
+                        "https://www.instagram.com/feedbackjuvenil".toUri())
                     context.startActivity(intent)
                 }
             )
