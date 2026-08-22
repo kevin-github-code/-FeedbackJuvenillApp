@@ -564,7 +564,6 @@ fun HomeScreen(viewModel: MainViewModel) {
                     modifier = Modifier
                         .size(150.dp)
                         .align(Alignment.CenterEnd)
-                        .padding(end = (-40).dp)
                 )
             }
         }
