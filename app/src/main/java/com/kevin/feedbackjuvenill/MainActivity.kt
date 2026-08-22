@@ -68,12 +68,14 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.window.Dialog
 
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,14 +87,29 @@ class MainActivity : ComponentActivity() {
                 val viewModel: MainViewModel = viewModel()
                 val user = viewModel.currentUser
                 
+                var showSignUp by remember { mutableStateOf(false) }
+                
                 Log.d("MainActivity", "Estado de Autenticação (Property): ${user?.email}")
                 
                 if (user != null) {
                     MainScreen(viewModel)
                 } else {
-                    LoginScreen(onLoginSuccess = {
-                        viewModel.updateCurrentUser()
-                    })
+                    if (showSignUp) {
+                        SignUpScreen(
+                            onSignUpSuccess = {
+                                viewModel.updateCurrentUser()
+                                showSignUp = false
+                            },
+                            onBackToLogin = { showSignUp = false }
+                        )
+                    } else {
+                        LoginScreen(
+                            onLoginSuccess = {
+                                viewModel.updateCurrentUser()
+                            },
+                            onNavigateToSignUp = { showSignUp = true }
+                        )
+                    }
                 }
             }
         }
@@ -166,15 +183,28 @@ fun NewsScreen(viewModel: MainViewModel) {
     val tabs = listOf("Feedback Juvenil", "Mundo")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = selectedTab) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { viewModel.onNewsTabSelected(index) },
-                    text = { Text(title) }
-                )
-            }
-        }
+        SecondaryTabRow(
+            selectedTab,
+            Modifier,
+            TabRowDefaults.primaryContainerColor,
+            TabRowDefaults.primaryContentColor,
+            @Composable { tabPositions ->
+                if (selectedTab < tabPositions.size) {
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTab])
+                    )
+                }
+            },
+            @Composable { HorizontalDivider() },
+            {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { viewModel.onNewsTabSelected(index) },
+                        text = { Text(title) }
+                    )
+                }
+            })
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -433,7 +463,7 @@ fun TvScreen() {
                 color = Color(0xFF1877F2),
                 icon = Icons.Filled.Share,
                 onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/feedbackjuvenil/live"))
+                    val intent = Intent(Intent.ACTION_VIEW, "https://www.facebook.com/feedbackjuvenil/live".toUri())
                     context.startActivity(intent)
                 }
             )
