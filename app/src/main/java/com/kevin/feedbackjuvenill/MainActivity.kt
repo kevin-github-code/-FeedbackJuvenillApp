@@ -68,8 +68,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.window.Dialog
 
@@ -182,7 +182,7 @@ fun NewsScreen(viewModel: MainViewModel) {
     val tabs = listOf("Feedback Juvenil", "Mundo")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(selectedTabIndex = selectedTab) {
+        SecondaryTabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -410,6 +410,7 @@ fun ReportDialog(onDismiss: () -> Unit) {
     }
 }
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun TvScreen() {
     var showLivePlayer by remember { mutableStateOf(false) }
