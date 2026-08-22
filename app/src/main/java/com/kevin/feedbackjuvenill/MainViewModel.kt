@@ -14,19 +14,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class MainViewModel : ViewModel() {
     
-    private val auth = FirebaseAuth.getInstance()
+    private val auth by lazy { FirebaseAuth.getInstance() }
     
-    private val _currentUser = MutableStateFlow(auth.currentUser)
+    private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
     val currentUserState: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
-    // For backwards compatibility and easier compose access if needed
-    var currentUser by mutableStateOf(auth.currentUser)
+    var currentUser by mutableStateOf<FirebaseUser?>(null)
         private set
 
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
@@ -39,19 +37,32 @@ class MainViewModel : ViewModel() {
     }
 
     init {
-        auth.addAuthStateListener(authListener)
+        try {
+            val initialUser = FirebaseAuth.getInstance().currentUser
+            currentUser = initialUser
+            _currentUser.value = initialUser
+            FirebaseAuth.getInstance().addAuthStateListener(authListener)
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Erro ao inicializar Firebase no ViewModel", e)
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        auth.removeAuthStateListener(authListener)
+        try {
+            FirebaseAuth.getInstance().removeAuthStateListener(authListener)
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Erro ao remover listener", e)
+        }
     }
 
-    private val newsApiService = Retrofit.Builder()
-        .baseUrl("https://newsapi.org/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(NewsApiService::class.java)
+    private val newsApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://newsapi.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(NewsApiService::class.java)
+    }
 
     // State for navigation
     var selectedItem by mutableIntStateOf(0)

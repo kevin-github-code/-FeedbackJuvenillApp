@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen(viewModel: MainViewModel = viewModel()) {
+fun MainScreen(viewModel: MainViewModel) {
     val selectedItem = viewModel.selectedItem
     val showReportDialog = viewModel.showReportDialog
     val selectedNewsItem = viewModel.selectedNewsItem
@@ -675,10 +675,12 @@ fun QuickActionButton(label: String, icon: ImageVector, onClick: () -> Unit) {
     }
 }
 
+/* 
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
     FeedbackJuvenillAppTheme {
-        MainScreen()
+        Text("O Preview não suporta ViewModels com Firebase. Use o emulador para testar.")
     }
 }
+*/
