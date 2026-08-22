@@ -3,9 +3,13 @@ package com.kevin.feedbackjuvenill
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
+import android.util.Log
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
@@ -18,6 +22,20 @@ class MainViewModel : ViewModel() {
     
     var currentUser by mutableStateOf(auth.currentUser)
         private set
+
+    private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+        currentUser = firebaseAuth.currentUser
+        Log.d("MainViewModel", "AuthStateListener: Usuário agora é ${currentUser?.email}")
+    }
+
+    init {
+        auth.addAuthStateListener(authListener)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        auth.removeAuthStateListener(authListener)
+    }
 
     private val newsApiService = Retrofit.Builder()
         .baseUrl("https://newsapi.org/")
@@ -73,11 +91,13 @@ class MainViewModel : ViewModel() {
     }
 
     fun logout() {
+        Log.d("MainViewModel", "Executando logout")
         auth.signOut()
         currentUser = null
     }
 
     fun updateCurrentUser() {
+        Log.d("MainViewModel", "Atualizando usuário: ${auth.currentUser?.email}")
         currentUser = auth.currentUser
     }
 
