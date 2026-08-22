@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
@@ -13,6 +14,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class MainViewModel : ViewModel() {
     
+    private val auth = FirebaseAuth.getInstance()
+    
+    var currentUser by mutableStateOf(auth.currentUser)
+        private set
+
     private val newsApiService = Retrofit.Builder()
         .baseUrl("https://newsapi.org/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -64,6 +70,15 @@ class MainViewModel : ViewModel() {
 
     fun onNewsItemClicked(item: NewsItem?) {
         selectedNewsItem = item
+    }
+
+    fun logout() {
+        auth.signOut()
+        currentUser = null
+    }
+
+    fun updateCurrentUser() {
+        currentUser = auth.currentUser
     }
 
     private fun fetchWorldNews() {

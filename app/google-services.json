@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "890164324192",
+    "project_id": "feedback-juvenil-app",
+    "storage_bucket": "feedback-juvenil-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890164324192:android:63f4daf977d76037e3a005",
+        "android_client_info": {
+          "package_name": "com.kevin.feedbackjuvenill"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBffppy5pDve9edw2ChzpcQYD0x48e3Sjw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

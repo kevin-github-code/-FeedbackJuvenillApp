@@ -23,9 +23,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -80,7 +82,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FeedbackJuvenillAppTheme {
-                MainScreen()
+                val viewModel: MainViewModel = viewModel()
+                if (viewModel.currentUser != null) {
+                    MainScreen(viewModel)
+                } else {
+                    LoginScreen(onLoginSuccess = {
+                        viewModel.updateCurrentUser()
+                    })
+                }
             }
         }
     }
@@ -520,11 +529,20 @@ fun HomeScreen(viewModel: MainViewModel) {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            Image(
-                painter = painterResource(id = R.drawable.logo_feedback_juvenil),
-                contentDescription = "Logo",
-                modifier = Modifier.size(60.dp)
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { viewModel.logout() }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Logout",
+                        tint = Color.Gray
+                    )
+                }
+                Image(
+                    painter = painterResource(id = R.drawable.logo_feedback_juvenil),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(60.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
