@@ -25,6 +25,7 @@ data class UserProfile(
     val email: String = "",
     val gender: String = "",
     val age: Int = 0,
+    val country: String = "Moçambique",
     val role: String = "user" // Para futura tela admin
 )
 
@@ -165,6 +166,23 @@ class MainViewModel : ViewModel() {
 
     fun onNewsItemClicked(item: NewsItem?) {
         selectedNewsItem = item
+    }
+
+    var allUsers by mutableStateOf<List<UserProfile>>(emptyList())
+        private set
+
+    fun fetchAllUsers() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val snapshot = db.collection("users").get().await()
+                val users = snapshot.toObjects(UserProfile::class.java)
+                viewModelScope.launch(Dispatchers.Main) {
+                    allUsers = users
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Erro ao buscar todos os usuários", e)
+            }
+        }
     }
 
     fun logout() {

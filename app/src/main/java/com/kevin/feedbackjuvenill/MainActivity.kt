@@ -23,7 +23,12 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -41,9 +46,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.util.Log
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +64,12 @@ import android.webkit.WebViewClient
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kevin.feedbackjuvenill.ui.theme.FeedbackJuvenillAppTheme
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
@@ -122,8 +136,8 @@ fun MainScreen(viewModel: MainViewModel) {
     val showReportDialog = viewModel.showReportDialog
     val selectedNewsItem = viewModel.selectedNewsItem
     
-    val items = listOf("Início", "TV Digital", "Notícias")
-    val icons = listOf(Icons.Filled.Home, Icons.Filled.PlayArrow, Icons.Filled.Info)
+    val items = listOf("Início", "TV Digital", "Notícias", "Sobre Nós")
+    val icons = listOf(Icons.Filled.Home, Icons.Filled.PlayArrow, Icons.Filled.Info, Icons.Filled.Person)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -168,6 +182,8 @@ fun MainScreen(viewModel: MainViewModel) {
                         DetailScreen(news = selectedNewsItem, onBack = { viewModel.onNewsItemClicked(null) })
                     }
                 }
+                3 -> AboutScreen()
+                4 -> AdminScreen(viewModel)
             }
             
             if (showReportDialog) {
@@ -564,7 +580,17 @@ fun HomeScreen(viewModel: MainViewModel) {
                 Image(
                     painter = painterResource(id = R.drawable.logo_feedback_juvenil),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier
+                        .size(60.dp)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    if (viewModel.userProfile?.role == "admin") {
+                                        viewModel.onItemSelected(4) // Admin Tab
+                                    }
+                                }
+                            )
+                        }
                 )
             }
         }
@@ -650,6 +676,139 @@ fun HomeScreen(viewModel: MainViewModel) {
         }
         
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+fun AboutScreen() {
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.icone_semtexto),
+                contentDescription = "Logo",
+                modifier = Modifier.size(100.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "Bem Vindo",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Feedback Juvenil",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "Contactos",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(text = "Numeros: 87.............", style = MaterialTheme.typography.bodyLarge)
+        Text(text = "Email: fj......", style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = "Localização: Moçambique, Maputo, Distrito de Marracuene",
+            style = MaterialTheme.typography.bodyLarge
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "Biografia",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "A Feedback Juvenil é uma multi-plataforma de midia digital inovadora, criada para dar voz a juventude, valorizar a cultura e impulsionar o desenvolvimento comunitario.\n\n**A Nossa Missão**\nConectar, informar e engajar as novas gerações através de conteúdos dinâmicos que abordam desde a atualidade, desporto e cultura até debates aprofundados sobre os temas que moldam o nosso futuro. Acreditamos que a informação livre, criativa e plural é a chave para a transformação social.\n\n**O Nosso Lema**\n\"Juntos, o futuro é de ouro.\"",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Justify
+        )
+    }
+}
+
+@Composable
+fun AdminScreen(viewModel: MainViewModel) {
+    val users = viewModel.allUsers
+    
+    LaunchedEffect(Unit) {
+        viewModel.fetchAllUsers()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Painel Admin",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = { viewModel.onItemSelected(0) }) {
+                Icon(Icons.Filled.Home, contentDescription = "Sair")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Estatísticas Rápidas
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = "Total de Usuários: ${users.size}", style = MaterialTheme.typography.titleMedium)
+                val avgAge = if (users.isNotEmpty()) users.map { it.age }.average() else 0.0
+                Text(text = "Média de Idade: ${"%.1f".format(avgAge)} anos", style = MaterialTheme.typography.bodyMedium)
+                
+                val maleCount = users.count { it.gender == "Masculino" }
+                val femaleCount = users.count { it.gender == "Feminino" }
+                Text(text = "Gênero: $maleCount M / $femaleCount F", style = MaterialTheme.typography.bodyMedium)
+                
+                val countries = users.groupBy { it.country }.mapValues { it.value.size }
+                Text(text = "Países: ${countries.entries.joinToString { "${it.key}: ${it.value}" }}", style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(text = "Lista de Usuários", style = MaterialTheme.typography.titleLarge)
+        
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(users) { user ->
+                ListItem(
+                    headlineContent = { Text(user.name) },
+                    supportingContent = { Text("${user.email} | ${user.age} anos | ${user.gender}") },
+                    overlineContent = { Text("Role: ${user.role}") },
+                    trailingContent = {
+                        if (user.role == "admin") {
+                            Icon(Icons.Filled.Settings, contentDescription = null, tint = Color(0xFFFFD700))
+                        }
+                    }
+                )
+                HorizontalDivider()
+            }
+        }
     }
 }
 

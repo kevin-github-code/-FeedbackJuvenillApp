@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -35,6 +36,7 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("Masculino") }
+    var country by remember { mutableStateOf("Moçambique") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     
@@ -93,6 +95,16 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth(),
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = country,
+            onValueChange = { country = it },
+            label = { Text("País") },
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = { Icon(Icons.Default.Public, contentDescription = null) }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -198,7 +210,8 @@ fun SignUpScreen(
                                             name = name,
                                             email = email,
                                             gender = gender,
-                                            age = age.toIntOrNull() ?: 0
+                                            age = age.toIntOrNull() ?: 0,
+                                            country = country
                                         )
                                         viewModel.saveUserProfile(profile) { success ->
                                             isLoading = false
