@@ -6,8 +6,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,10 +26,20 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SignUpScreen(onSignUpSuccess: () -> Unit, onBackToLogin: () -> Unit) {
+fun SignUpScreen(
+    viewModel: MainViewModel,
+    onSignUpSuccess: () -> Unit,
+    onBackToLogin: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var age by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("Masculino") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    
+    var genderExpanded by remember { mutableStateOf(false) }
+    val genders = listOf("Masculino", "Feminino", "Outro")
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -64,6 +77,16 @@ fun SignUpScreen(onSignUpSuccess: () -> Unit, onBackToLogin: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Nome Completo") },
+            modifier = Modifier.fillMaxWidth(),
+            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("E-mail") },
@@ -72,7 +95,51 @@ fun SignUpScreen(onSignUpSuccess: () -> Unit, onBackToLogin: () -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Row(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = age,
+                onValueChange = { if (it.all { char -> char.isDigit() }) age = it },
+                label = { Text("Idade") },
+                modifier = Modifier.weight(1f),
+                leadingIcon = { Icon(Icons.Default.Numbers, contentDescription = null) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            Box(modifier = Modifier.weight(1.5f)) {
+                OutlinedTextField(
+                    value = gender,
+                    onValueChange = {},
+                    label = { Text("Gênero") },
+                    modifier = Modifier.fillMaxWidth(),
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { genderExpanded = true }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        }
+                    }
+                )
+                DropdownMenu(
+                    expanded = genderExpanded,
+                    onDismissRequest = { genderExpanded = false }
+                ) {
+                    genders.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                gender = option
+                                genderExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = password,
@@ -117,16 +184,33 @@ fun SignUpScreen(onSignUpSuccess: () -> Unit, onBackToLogin: () -> Unit) {
 
         Button(
             onClick = {
-                if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
+                if (name.isNotEmpty() && email.isNotEmpty() && age.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
                     if (password == confirmPassword) {
                         isLoading = true
                         errorMessage = null
                         auth.createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
-                                isLoading = false
                                 if (task.isSuccessful) {
-                                    onSignUpSuccess()
+                                    val user = task.result?.user
+                                    if (user != null) {
+                                        val profile = UserProfile(
+                                            uid = user.uid,
+                                            name = name,
+                                            email = email,
+                                            gender = gender,
+                                            age = age.toIntOrNull() ?: 0
+                                        )
+                                        viewModel.saveUserProfile(profile) { success ->
+                                            isLoading = false
+                                            if (success) {
+                                                onSignUpSuccess()
+                                            } else {
+                                                errorMessage = "Conta criada, mas erro ao salvar perfil."
+                                            }
+                                        }
+                                    }
                                 } else {
+                                    isLoading = false
                                     errorMessage = task.exception?.message ?: "Erro ao criar conta"
                                 }
                             }

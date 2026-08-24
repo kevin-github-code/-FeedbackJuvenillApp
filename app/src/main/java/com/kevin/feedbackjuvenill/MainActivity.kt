@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     if (showSignUp) {
                         SignUpScreen(
+                            viewModel = viewModel,
                             onSignUpSuccess = {
                                 viewModel.updateCurrentUser()
                                 showSignUp = false
@@ -542,7 +543,7 @@ fun HomeScreen(viewModel: MainViewModel) {
         ) {
             Column {
                 Text(
-                    text = "Olá, Bem-vindo!",
+                    text = "Olá, ${viewModel.userProfile?.name?.split(" ")?.firstOrNull() ?: "Bem-vindo"}!",
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Gray
                 )
@@ -675,12 +676,3 @@ fun QuickActionButton(label: String, icon: ImageVector, onClick: () -> Unit) {
     }
 }
 
-/* 
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    FeedbackJuvenillAppTheme {
-        Text("O Preview não suporta ViewModels com Firebase. Use o emulador para testar.")
-    }
-}
-*/

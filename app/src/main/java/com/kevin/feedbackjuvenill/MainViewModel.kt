@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,12 +15,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+
+data class UserProfile(
+    val uid: String = "",
+    val name: String = "",
+    val email: String = "",
+    val gender: String = "",
+    val age: Int = 0,
+    val role: String = "user" // Para futura tela admin
+)
 
 class MainViewModel : ViewModel() {
     
     private val auth by lazy { FirebaseAuth.getInstance() }
+    private val db by lazy { FirebaseFirestore.getInstance() }
     
     private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
     val currentUserState: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
@@ -27,11 +39,19 @@ class MainViewModel : ViewModel() {
     var currentUser by mutableStateOf<FirebaseUser?>(null)
         private set
 
+    var userProfile by mutableStateOf<UserProfile?>(null)
+        private set
+
     private val authListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         val user = firebaseAuth.currentUser
         viewModelScope.launch(Dispatchers.Main) {
             currentUser = user
             _currentUser.value = user
+            if (user != null) {
+                fetchUserProfile(user.uid)
+            } else {
+                userProfile = null
+            }
             Log.d("MainViewModel", "AuthStateListener: Usuário atualizado para ${user?.email}")
         }
     }
@@ -41,9 +61,45 @@ class MainViewModel : ViewModel() {
             val initialUser = FirebaseAuth.getInstance().currentUser
             currentUser = initialUser
             _currentUser.value = initialUser
+            if (initialUser != null) {
+                fetchUserProfile(initialUser.uid)
+            }
             FirebaseAuth.getInstance().addAuthStateListener(authListener)
         } catch (e: Exception) {
             Log.e("MainViewModel", "Erro ao inicializar Firebase no ViewModel", e)
+        }
+    }
+
+    private fun fetchUserProfile(uid: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val document = db.collection("users").document(uid).get().await()
+                if (document.exists()) {
+                    val profile = document.toObject(UserProfile::class.java)
+                    viewModelScope.launch(Dispatchers.Main) {
+                        userProfile = profile
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Erro ao buscar perfil do usuário", e)
+            }
+        }
+    }
+
+    fun saveUserProfile(profile: UserProfile, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                db.collection("users").document(profile.uid).set(profile).await()
+                viewModelScope.launch(Dispatchers.Main) {
+                    userProfile = profile
+                    onComplete(true)
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Erro ao salvar perfil", e)
+                viewModelScope.launch(Dispatchers.Main) {
+                    onComplete(false)
+                }
+            }
         }
     }
 
