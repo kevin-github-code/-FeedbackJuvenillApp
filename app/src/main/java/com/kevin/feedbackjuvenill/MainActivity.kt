@@ -49,6 +49,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -211,6 +216,7 @@ fun MainScreen(viewModel: MainViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun NewsScreen(viewModel: MainViewModel) {
     val selectedTab = viewModel.selectedNewsTab

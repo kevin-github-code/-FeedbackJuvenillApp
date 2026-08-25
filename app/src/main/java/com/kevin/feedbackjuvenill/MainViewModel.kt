@@ -199,16 +199,16 @@ class MainViewModel : ViewModel() {
         NewsItem("Marracuene Celebra o Dia do Trabalhador com Desfiles, Discursos e Atividades Culturais", "Vídeo publicado no YouTube — 18 visualizações. Link: https://www.youtube.com/watch?v=RdXd-soGFeg", "2025-05-18", "YouTube"),
         NewsItem("Entrevista Exclusiva com os Gladiadores do Berro ao Extremo(2025)", "Vídeo publicado no YouTube — 53 visualizações. Link: https://www.youtube.com/watch?v=TWNdSAX_XT4", "2025-05-05", "YouTube")
     ))
-+
-+    // Função para refresh acionada pelo pull-to-refresh
-+    fun refreshNews(selectedTabIndex: Int) {
-+        if (selectedTabIndex == 1) {
-+            fetchWorldNews()
-+        } else {
-+            // Para feedbackNews (estático no momento) apenas força recomposição
-+            feedbackNews = feedbackNews.toList()
-+        }
-+    }
+
+    // Função para refresh acionada pelo pull-to-refresh
+    fun refreshNews(selectedTabIndex: Int) {
+        if (selectedTabIndex == 1) {
+            fetchWorldNews()
+        } else {
+            // Para feedbackNews (estático no momento) apenas força recomposição
+            feedbackNews = feedbackNews.toList()
+        }
+    }
 
     // Actions
     fun onItemSelected(index: Int) {
