@@ -2,11 +2,12 @@ package com.kevin.feedbackjuvenill
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import android.content.Intent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,13 +44,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.util.Log
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
@@ -61,10 +62,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.WebResourceRequest
 import androidx.compose.ui.viewinterop.AndroidView
 import com.kevin.feedbackjuvenill.ui.theme.FeedbackJuvenillAppTheme
 
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.aspectRatio
@@ -83,12 +84,17 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.window.Dialog
+import androidx.compose.material3.Surface
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextOverflow
 
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,8 +147,12 @@ fun MainScreen(viewModel: MainViewModel) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = androidx.compose.ui.graphics.Color(0xFFF4F8FD),
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = Color.White,
+                tonalElevation = 8.dp
+            ) {
                 items.forEachIndexed { index, item ->
                     NavigationBarItem(
                         icon = { Icon(icons[index], contentDescription = item) },
@@ -151,7 +161,14 @@ fun MainScreen(viewModel: MainViewModel) {
                         onClick = { 
                             viewModel.onItemSelected(index)
                             viewModel.onNewsItemClicked(null) // Reset news detail when changing tabs
-                        }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color.White,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = Color(0xFF718096),
+                            unselectedTextColor = Color(0xFF718096)
+                        )
                     )
                 }
             }
@@ -171,6 +188,7 @@ fun MainScreen(viewModel: MainViewModel) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .background(Color(0xFFF4F8FD))
         ) {
             when (selectedItem) {
                 0 -> HomeScreen(viewModel)
@@ -199,7 +217,23 @@ fun NewsScreen(viewModel: MainViewModel) {
     val tabs = listOf("Feedback Juvenil", "Mundo")
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SecondaryTabRow(selectedTabIndex = selectedTab) {
+        Text(
+            text = "Notícias",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 4.dp)
+        )
+        Text(
+            text = "Informação que aproxima e inspira.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color(0xFF6B7A90),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
+        )
+        SecondaryTabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.primary
+        ) {
             tabs.forEachIndexed { index, title ->
                 Tab(
                     selected = selectedTab == index,
@@ -215,8 +249,17 @@ fun NewsScreen(viewModel: MainViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNewsList
-            items(newsList) { item ->
-                NewsCard(item, onClick = { viewModel.onNewsItemClicked(item) })
+            if (newsList.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = "Ainda não há notícias",
+                        message = "Volte a consultar dentro de momentos para ver novas publicações."
+                    )
+                }
+            } else {
+                items(newsList) { item ->
+                    NewsCard(item, onClick = { viewModel.onNewsItemClicked(item) })
+                }
             }
         }
     }
@@ -225,62 +268,61 @@ fun NewsScreen(viewModel: MainViewModel) {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun DetailScreen(news: NewsItem, onBack: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFFF4F8FD))) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(onClick = onBack) {
-                Text("← Voltar")
+                Text("Voltar")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = news.title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis
             )
         }
 
-        // Web News Detail
-        if (news.description.startsWith("http")) {
-             AndroidView(factory = {
+        // Web News Detail: se existir URL em description, extrai e abre em WebView interno
+        val urlRegex = "(https?://[^\\s]+)".toRegex()
+        val urlMatch = urlRegex.find(news.description)
+        if (urlMatch != null) {
+            val url = urlMatch.value
+            AndroidView(factory = {
                 WebView(it).apply {
                     webViewClient = WebViewClient()
                     settings.javaScriptEnabled = true
-                    loadUrl(news.description)
+                    loadUrl(url)
                 }
             }, modifier = Modifier.fillMaxSize())
         } else {
             // Local News Detail
-            Column(
+            Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                tonalElevation = 2.dp
             ) {
-                Text(
-                    text = news.category.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = news.title,
-                    style = MaterialTheme.typography.headlineMedium
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = news.date,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = news.description,
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = news.category.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 1.2.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(text = news.title, style = MaterialTheme.typography.headlineMedium)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(text = news.date, style = MaterialTheme.typography.labelSmall, color = Color(0xFF718096))
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(text = news.description, style = MaterialTheme.typography.bodyLarge)
+                }
             }
         }
     }
@@ -292,6 +334,7 @@ fun NewsCard(news: NewsItem, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp)
+            .border(1.dp, Color(0xFFE4ECF7), MaterialTheme.shapes.extraLarge)
             .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = MaterialTheme.shapes.extraLarge,
@@ -308,14 +351,14 @@ fun NewsCard(news: NewsItem, onClick: () -> Unit) {
             Text(
                 text = news.title,
                 style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF1C1B1F),
+                color = Color(0xFF10233F),
                 lineHeight = 26.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = news.description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.DarkGray,
+                color = Color(0xFF5D6B7E),
                 maxLines = 3
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -430,82 +473,90 @@ fun ReportDialog(onDismiss: () -> Unit) {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun TvScreen() {
-    var showLivePlayer by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-    
+    var selectedTab by remember { mutableStateOf(0) }
+    var selectedVideoId by remember { mutableStateOf<String?>(null) }
+    val tabs = listOf("Vídeos", "Shorts")
+    val channelUrl = if (selectedTab == 0) {
+        "https://www.youtube.com/@FeedbackJuvenilmz/videos"
+    } else {
+        "https://www.youtube.com/@FeedbackJuvenilmz/shorts"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Color(0xFFF4F8FD))
     ) {
-        Text(
-            text = "TV Digital & Lives",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-        
-        if (!showLivePlayer) {
-            Text(
-                text = "Escolha uma plataforma para assistir ao vivo:",
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
+        if (selectedVideoId == null) {
+            Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
+                Text(
+                    text = "TV Digital",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Assista aos conteúdos mais recentes da Feedback Juvenil.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF5D6B7E),
+                    modifier = Modifier.padding(top = 6.dp, bottom = 18.dp)
+                )
+            }
 
-            SocialButton(
-                text = "Assistir Feedback Juvenil",
-                color = Color(0xFFFF0000),
-                icon = Icons.Filled.PlayArrow,
-                onClick = { showLivePlayer = true }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SocialButton(
-                text = "Facebook Live (Externo)",
-                color = Color(0xFF1877F2),
-                icon = Icons.Filled.Share,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, "https://www.facebook.com/feedbackjuvenil/live".toUri())
-                    context.startActivity(intent)
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(title) },
+                        icon = {
+                            Icon(
+                                imageVector = if (index == 0) Icons.Filled.PlayArrow else Icons.Filled.Info,
+                                contentDescription = null
+                            )
+                        }
+                    )
                 }
-            )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            SocialButton(
-                text = "Instagram (Externo)",
-                color = Color(0xFFE4405F),
-                icon = Icons.Filled.Info,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW,
-                        "https://www.instagram.com/feedbackjuvenil".toUri())
-                    context.startActivity(intent)
-                }
-            )
+            key(channelUrl) {
+                YoutubeChannelWebView(
+                    url = channelUrl,
+                    onVideoSelected = { selectedVideoId = it },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp)
+                )
+            }
         } else {
-            // Player Integrado (YouTube Mobile View)
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
+            ) {
                 TextButton(
-                    onClick = { showLivePlayer = false },
-                    modifier = Modifier.align(Alignment.Start)
+                    onClick = { selectedVideoId = null }
                 ) {
-                    Text("← Voltar")
+                    Text("Voltar para ${tabs[selectedTab]}")
                 }
-                
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    elevation = CardDefaults.cardElevation(8.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
                     AndroidView(factory = {
                         WebView(it).apply {
                             webViewClient = WebViewClient()
                             settings.javaScriptEnabled = true
-                            loadUrl("https://www.youtube.com/@FeedbackJuvenilmz")
+                            settings.domStorageEnabled = true
+                            settings.mediaPlaybackRequiresUserGesture = false
+                            loadUrl("https://www.youtube.com/embed/$selectedVideoId?autoplay=1&playsinline=1")
                         }
                     })
                 }
@@ -514,30 +565,50 @@ fun TvScreen() {
     }
 }
 
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun SocialButton(
-    text: String,
-    color: Color,
-    icon: ImageVector,
-    onClick: () -> Unit
+private fun YoutubeChannelWebView(
+    url: String,
+    onVideoSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = color),
-        elevation = ButtonDefaults.buttonElevation(4.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = Color.White)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(text = text, color = Color.White, fontWeight = FontWeight.Bold)
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.mediaPlaybackRequiresUserGesture = true
+                webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(
+                        view: WebView?,
+                        request: WebResourceRequest?
+                    ): Boolean {
+                        val videoId = request?.url?.let(::youtubeVideoId)
+                        return if (videoId != null) {
+                            onVideoSelected(videoId)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                }
+                loadUrl(url)
+            }
         }
+    )
+}
+
+private fun youtubeVideoId(uri: Uri): String? {
+    val host = uri.host.orEmpty()
+    if (!host.contains("youtube.com") && !host.contains("youtu.be")) return null
+    val id = when {
+        host.contains("youtu.be") -> uri.pathSegments.firstOrNull()
+        uri.path == "/watch" -> uri.getQueryParameter("v")
+        uri.pathSegments.firstOrNull() == "shorts" -> uri.pathSegments.getOrNull(1)
+        else -> null
     }
+    return id?.takeIf { it.matches(Regex("[A-Za-z0-9_-]{6,}")) }
 }
 
 @Composable
@@ -548,7 +619,8 @@ fun HomeScreen(viewModel: MainViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(16.dp),
+            .background(Color(0xFFF4F8FD))
+            .padding(horizontal = 20.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.Start
     ) {
         // Top Header
@@ -561,7 +633,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                 Text(
                     text = "Olá, ${viewModel.userProfile?.name?.split(" ")?.firstOrNull() ?: "Bem-vindo"}!",
                     style = MaterialTheme.typography.titleLarge,
-                    color = Color.Gray
+                    color = Color(0xFF6B7A90)
                 )
                 Text(
                     text = "Feedback Juvenil",
@@ -581,7 +653,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                     painter = painterResource(id = R.drawable.logo_feedback_juvenil),
                     contentDescription = "Logo",
                     modifier = Modifier
-                        .size(60.dp)
+                        .size(52.dp)
                         .pointerInput(Unit) {
                             detectTapGestures(
                                 onLongPress = {
@@ -601,10 +673,11 @@ fun HomeScreen(viewModel: MainViewModel) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(190.dp)
                 .clickable { viewModel.onItemSelected(1) },
             shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(
@@ -686,8 +759,15 @@ fun AboutScreen() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(16.dp)
+            .background(Color(0xFFF4F8FD))
+            .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -710,6 +790,7 @@ fun AboutScreen() {
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -717,10 +798,12 @@ fun AboutScreen() {
         Text(
             text = "Contactos",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
-        Text(text = "Numeros: 87.............", style = MaterialTheme.typography.bodyLarge)
-        Text(text = "Email: fj......", style = MaterialTheme.typography.bodyLarge)
+        Text(text = "Numeros: 875443806", style = MaterialTheme.typography.bodyLarge)
+        Text(text = "Numeros: 835654536", style = MaterialTheme.typography.bodyLarge)
+        Text(text = "Email: fjuvenilmz@gmail.com", style = MaterialTheme.typography.bodyLarge)
         Text(
             text = "Localização: Moçambique, Maputo, Distrito de Marracuene",
             style = MaterialTheme.typography.bodyLarge
@@ -731,7 +814,8 @@ fun AboutScreen() {
         Text(
             text = "Biografia",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = "A Feedback Juvenil é uma multi-plataforma de midia digital inovadora, criada para dar voz a juventude, valorizar a cultura e impulsionar o desenvolvimento comunitario.\n\n**A Nossa Missão**\nConectar, informar e engajar as novas gerações através de conteúdos dinâmicos que abordam desde a atualidade, desporto e cultura até debates aprofundados sobre os temas que moldam o nosso futuro. Acreditamos que a informação livre, criativa e plural é a chave para a transformação social.\n\n**O Nosso Lema**\n\"Juntos, o futuro é de ouro.\"",
@@ -752,7 +836,8 @@ fun AdminScreen(viewModel: MainViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(Color(0xFFF4F8FD))
+            .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -762,7 +847,8 @@ fun AdminScreen(viewModel: MainViewModel) {
             Text(
                 text = "Painel Admin",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
             IconButton(onClick = { viewModel.onItemSelected(0) }) {
                 Icon(Icons.Filled.Home, contentDescription = "Sair")
@@ -792,7 +878,7 @@ fun AdminScreen(viewModel: MainViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "Lista de Usuários", style = MaterialTheme.typography.titleLarge)
+        Text(text = "Lista de Usuários", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
         
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(users) { user ->
@@ -821,7 +907,8 @@ fun QuickActionButton(label: String, icon: ImageVector, onClick: () -> Unit) {
         Card(
             shape = MaterialTheme.shapes.large,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-            modifier = Modifier.size(64.dp)
+            modifier = Modifier.size(64.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary)
@@ -835,3 +922,33 @@ fun QuickActionButton(label: String, icon: ImageVector, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun EmptyState(title: String, message: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = Color.White,
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6B7A90),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
