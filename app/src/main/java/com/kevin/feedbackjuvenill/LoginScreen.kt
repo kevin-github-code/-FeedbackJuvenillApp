@@ -1,10 +1,12 @@
 package com.kevin.feedbackjuvenill
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +39,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -55,16 +61,19 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val auth = FirebaseAuth.getInstance()
-    val accentColor = Color(0xFFCF9C5E)
-    val darkBackground = Color(0xFF121619)
-    val fieldOutline = Color(0xFF2E3338)
-    val textColor = Color(0xFFEAEAEA)
-    val secondaryText = Color(0xFF9AA0A6)
+    val backgroundColor = Color(0xFFF3F8FF)
+    val cardColor = Color.White
+    val accentColor = Color(0xFF1E88E5)
+    val accentDark = Color(0xFF1565C0)
+    val titleColor = Color(0xFF12355B)
+    val subtitleColor = Color(0xFF60758C)
+    val fieldBackground = Color(0xFFF8FBFF)
+    val fieldBorder = Color(0xFFD9E7F8)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(darkBackground),
+            .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -73,44 +82,31 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
                 .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
+            Image(
+                painter = painterResource(id = R.drawable.logo_feedback_juvenil),
+                contentDescription = "Logo",
                 modifier = Modifier
-                    .size(72.dp)
-                    .border(width = 2.dp, color = accentColor, shape = CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .border(width = 2.dp, color = accentColor, shape = CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "FJ",
-                        color = accentColor,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-                }
-            }
+                    .size(85.dp)
+                    .shadow(12.dp, CircleShape)
+                    .clip(CircleShape)
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = "Login",
-                color = textColor,
-                fontSize = 28.sp,
+                color = titleColor,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Login to your account to continue",
-                color = secondaryText,
-                fontSize = 12.sp,
+                color = subtitleColor,
+                fontSize = 13.sp,
                 textAlign = TextAlign.Center
             )
 
@@ -122,28 +118,28 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
                 label = { Text("Email Address") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = textColor),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = titleColor),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent,
-                    focusedTextColor = textColor,
-                    unfocusedTextColor = textColor,
-                    focusedIndicatorColor = fieldOutline,
-                    unfocusedIndicatorColor = fieldOutline,
-                    focusedLabelColor = secondaryText,
-                    unfocusedLabelColor = secondaryText,
+                    focusedContainerColor = fieldBackground,
+                    unfocusedContainerColor = fieldBackground,
+                    disabledContainerColor = fieldBackground,
+                    errorContainerColor = fieldBackground,
+                    focusedTextColor = titleColor,
+                    unfocusedTextColor = titleColor,
+                    focusedIndicatorColor = accentColor,
+                    unfocusedIndicatorColor = fieldBorder,
+                    focusedLabelColor = subtitleColor,
+                    unfocusedLabelColor = subtitleColor,
                     cursorColor = accentColor,
-                    focusedPlaceholderColor = secondaryText,
-                    unfocusedPlaceholderColor = secondaryText
+                    focusedPlaceholderColor = subtitleColor,
+                    unfocusedPlaceholderColor = subtitleColor
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 isError = errorMessage != null
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = password,
@@ -151,29 +147,29 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
                 label = { Text("Password") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = textColor),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = titleColor),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent,
-                    focusedTextColor = textColor,
-                    unfocusedTextColor = textColor,
-                    focusedIndicatorColor = fieldOutline,
-                    unfocusedIndicatorColor = fieldOutline,
-                    focusedLabelColor = secondaryText,
-                    unfocusedLabelColor = secondaryText,
+                    focusedContainerColor = fieldBackground,
+                    unfocusedContainerColor = fieldBackground,
+                    disabledContainerColor = fieldBackground,
+                    errorContainerColor = fieldBackground,
+                    focusedTextColor = titleColor,
+                    unfocusedTextColor = titleColor,
+                    focusedIndicatorColor = accentColor,
+                    unfocusedIndicatorColor = fieldBorder,
+                    focusedLabelColor = subtitleColor,
+                    unfocusedLabelColor = subtitleColor,
                     cursorColor = accentColor,
-                    focusedPlaceholderColor = secondaryText,
-                    unfocusedPlaceholderColor = secondaryText
+                    focusedPlaceholderColor = subtitleColor,
+                    unfocusedPlaceholderColor = subtitleColor
                 ),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = null,
-                            tint = secondaryText
+                            tint = subtitleColor
                         )
                     }
                 },
@@ -187,13 +183,14 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    onClick = { /* TODO: recovery flow */ },
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                    onClick = { /* TODO: recuperação de senha */ },
+                    contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
                         text = "Forgot Password?",
-                        color = secondaryText,
-                        fontSize = 12.sp
+                        color = accentDark,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -223,27 +220,27 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
                                 if (task.isSuccessful) {
                                     onLoginSuccess()
                                 } else {
-                                    errorMessage = task.exception?.message ?: "Error signing in"
+                                    errorMessage = task.exception?.message ?: "Erro ao fazer login"
                                 }
                             }
                     } else {
-                        errorMessage = "Fill in all fields"
+                        errorMessage = "Preencha todos os campos"
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(54.dp),
                 enabled = !isLoading,
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = accentColor,
-                    contentColor = Color(0xFF1D2126),
+                    contentColor = Color.White,
                     disabledContainerColor = accentColor.copy(alpha = 0.7f)
                 )
             ) {
                 if (isLoading) {
-                    androidx.compose.material3.CircularProgressIndicator(
-                        color = Color(0xFF1D2126),
+                    CircularProgressIndicator(
+                        color = Color.White,
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp
                     )
@@ -267,11 +264,11 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(22.dp))
 
             Text(
                 text = "or continue with",
-                color = secondaryText,
+                color = subtitleColor,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center
             )
@@ -284,26 +281,26 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
-                        .background(Color(0xFF1C2024), shape = CircleShape)
-                        .border(1.dp, Color(0xFF2F3439), shape = CircleShape),
+                        .size(54.dp)
+                        .background(Color.White, shape = CircleShape)
+                        .border(1.dp, Color(0xFFDBE7F8), shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "G", color = textColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "G", color = accentColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
-                        .background(Color(0xFF1C2024), shape = CircleShape)
-                        .border(1.dp, Color(0xFF2F3439), shape = CircleShape),
+                        .size(54.dp)
+                        .background(Color.White, shape = CircleShape)
+                        .border(1.dp, Color(0xFFDBE7F8), shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "X", color = textColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "X", color = accentColor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(22.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -311,13 +308,13 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToSignUp: () -> Unit) {
             ) {
                 Text(
                     text = "Don't have an account?",
-                    color = secondaryText,
+                    color = subtitleColor,
                     fontSize = 12.sp
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 TextButton(
                     onClick = onNavigateToSignUp,
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                    contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
                         text = "Sign up",

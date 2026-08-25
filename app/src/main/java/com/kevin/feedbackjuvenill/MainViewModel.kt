@@ -142,7 +142,7 @@ class MainViewModel : ViewModel() {
         private set
 
     // News Data (carregada a partir dos vídeos publicados no canal YouTube — Feedback Juvenil)
-    val feedbackNews = listOf(
+    var feedbackNews by mutableStateOf(listOf(
         NewsItem("CDJ DE MARRACUENE UNE JUVENTUDE: Ndixe vence Matalane nos penáltis numa tarde de festa", "Vídeo publicado no YouTube — 4 visualizações. Link: https://www.youtube.com/watch?v=GaNAqwPXs6c", "2026-08-25", "YouTube"),
         NewsItem("𝐌𝐀𝐑𝐑𝐀𝐂𝐔𝐄𝐍𝐄 𝐍𝐎 𝐂𝐄𝐍𝐓𝐑𝐎 𝐃𝐎 𝐏𝐀Í𝐒: 𝐋é𝐠𝐮𝐚 𝐫𝐮𝐦𝐨  à 𝐅𝐀𝐂𝐈𝐌 𝐧𝐮𝐦 𝐯𝐢𝐛𝐫𝐚𝐧𝐭𝐞 𝐦𝐚𝐧𝐢𝐟𝐞𝐬𝐭𝐨 𝐝𝐞 𝐮𝐧𝐢ã𝐨 𝐞 𝐧𝐞𝐠ó𝐜𝐢𝐨𝐬!", "Vídeo publicado no YouTube — 3 visualizações. Link: https://www.youtube.com/watch?v=kSwD4CbUNv4", "2026-08-24", "YouTube"),
         NewsItem("𝐎 𝐏𝐎𝐍𝐓𝐎 𝐉𝐎𝐕𝐄𝐌 𝐃𝐄𝐒𝐓𝐄 𝐒Á𝐁𝐀𝐃𝐎 𝐄𝐒𝐓Á 𝐈𝐌𝐏𝐄𝐑𝐃Í𝐕𝐄𝐋 ,𝐏𝐎𝐈𝐒 𝐑𝐄𝐂𝐄𝐁𝐄𝐌𝐎𝐒 𝐎 𝐏𝐑𝐄𝐒𝐈𝐃𝐄𝐍𝐓𝐄 𝐃𝐎 𝐂𝐃𝐉, 𝐑𝐀𝐅𝐀𝐄𝐋 𝐌𝐀𝐓𝐒𝐔𝐕𝐄", "Vídeo publicado no YouTube — 43 visualizações. Link: https://www.youtube.com/watch?v=Roe7Zso_iUc", "2026-05-01", "YouTube"),
@@ -198,7 +198,17 @@ class MainViewModel : ViewModel() {
         NewsItem("shafee Sidat fala sobre os artistas locais🤯 #1demaio #diadotrabalhador #shafeeSidat", "Vídeo publicado no YouTube — 194 visualizações. Link: https://www.youtube.com/watch?v=js9LJG1KRJo", "2025-05-21", "YouTube"),
         NewsItem("Marracuene Celebra o Dia do Trabalhador com Desfiles, Discursos e Atividades Culturais", "Vídeo publicado no YouTube — 18 visualizações. Link: https://www.youtube.com/watch?v=RdXd-soGFeg", "2025-05-18", "YouTube"),
         NewsItem("Entrevista Exclusiva com os Gladiadores do Berro ao Extremo(2025)", "Vídeo publicado no YouTube — 53 visualizações. Link: https://www.youtube.com/watch?v=TWNdSAX_XT4", "2025-05-05", "YouTube")
-    )
+    ))
++
++    // Função para refresh acionada pelo pull-to-refresh
++    fun refreshNews(selectedTabIndex: Int) {
++        if (selectedTabIndex == 1) {
++            fetchWorldNews()
++        } else {
++            // Para feedbackNews (estático no momento) apenas força recomposição
++            feedbackNews = feedbackNews.toList()
++        }
++    }
 
     // Actions
     fun onItemSelected(index: Int) {

@@ -216,6 +216,17 @@ fun NewsScreen(viewModel: MainViewModel) {
     val selectedTab = viewModel.selectedNewsTab
     val tabs = listOf("Feedback Juvenil", "Mundo")
 
+    // pull-to-refresh state
+    val isRefreshing = remember { mutableStateOf(false) }
+    val pullRefreshState = rememberPullRefreshState(isRefreshing.value, onRefresh = {
+        // inicia refresh no ViewModel e mostra indicador
+        isRefreshing.value = true
+        viewModel.refreshNews(selectedTab)
+        // simula fim do refresh depois que operações assíncronas terminarem
+        // para world news fetchWorldNews atualiza state quando terminar
+        // aqui fazemos um pequeno delay usando LaunchedEffect
+    })
+
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
             text = "Notícias",
@@ -243,24 +254,52 @@ fun NewsScreen(viewModel: MainViewModel) {
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNewsList
-            if (newsList.isEmpty()) {
-                item {
-                    EmptyState(
-                        title = "Ainda não há notícias",
-                        message = "Volte a consultar dentro de momentos para ver novas publicações."
-                    )
-                }
-            } else {
-                items(newsList) { item ->
-                    NewsCard(item, onClick = { viewModel.onNewsItemClicked(item) })
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)) {
+
+            // O conteúdo principal (lista)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                val newsList = if (selectedTab == 0) viewModel.feedbackNews else viewModel.worldNewsList
+                if (newsList.isEmpty()) {
+                    item {
+                        EmptyState(
+                            title = "Ainda não há notícias",
+                            message = "Volte a consultar dentro de momentos para ver novas publicações."
+                        )
+                    }
+                } else {
+                    items(newsList) { item ->
+                        NewsCard(item, onClick = { viewModel.onNewsItemClicked(item) })
+                    }
                 }
             }
+
+            // Indicador de pull-to-refresh
+            PullRefreshIndicator(
+                refreshing = isRefreshing.value,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                scale = true,
+                backgroundColor = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        // Observa quando worldNewsList mudar para desligar o indicador
+        val worldNews by remember { derivedStateOf { viewModel.worldNewsList } }
+        LaunchedEffect(worldNews) {
+            // quando a lista mundo for atualizada, termina o indicador
+            isRefreshing.value = false
+        }
+
+        // Para feedbackNews também desligar indicador quando alterar
+        val feedbackNews by remember { derivedStateOf { viewModel.feedbackNews } }
+        LaunchedEffect(feedbackNews) {
+            isRefreshing.value = false
         }
     }
 }
